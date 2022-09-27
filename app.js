@@ -1,3 +1,7 @@
+/*
+File Purpose: This is the main file which starts up the NodeJS backend server
+*/
+
 // To create server and manage format data is transmitted NOTE
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -13,6 +17,9 @@ const cors = require("cors");
 
 // Get environment variables NOTE
 const { SERVER_PORT, FRONTEND_URL } = require("./config");
+
+// Set up routes NOTE
+const usersRoutes = require("./routes/users");
 
 // Start up server STEP
 const app = express();
@@ -35,3 +42,4 @@ app.use(bodyParser.json());
 // Set up multer STEP
 
 // Set up routes STEP
+app.use("/users", usersRoutes);
