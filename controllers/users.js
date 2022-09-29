@@ -12,11 +12,13 @@ correct endpoint with the appropriae data
 
 */
 
+const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const dbconnect = require("../middlewares/dbconfig");
 const { ACCESS_TOKEN_SECRET } = require("../config");
+const transporter = require("../middlewares/emailconfig");
 
 // GET /users/login
 exports.login = function (userDetails, callback) {
@@ -121,4 +123,92 @@ exports.signup = function (userDetails, callback) {
     .catch((err) => {
       return callback(err, null);
     });
+};
+
+/*
+
+Idea for resetting password: NOTE
+
+Server verifies token when
+1. user reset email clicked
+2: user submits password on reset password paeg
+by checking that token same as one for user in the DB
+
+When password changed successfully or token expires, delete token from database
+
+*/
+
+// GET /users/getResetPWLink
+exports.getResetPWLink = function (userEmail, callback) {
+  // Establish connection and connect to DB STEP
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  // Check if there is such a registered email in DB STEP
+  let sqlQuery = "SELECT * FROM users WHERE user_email = ?";
+
+  conn.query(sqlQuery, [userEmail], (err, result) => {
+    if (err) {
+      return callback(err, null);
+    }
+
+    // If this email is not registered, send back an error STEP
+    if (result.length == 0) {
+      return callback(null, { message: "Invalid email entered" });
+    }
+
+    // If there is such a registered email,
+    const userId = result[0].user_id;
+
+    // generate a random byte string STEP
+    const securityToken = crypto.randomBytes(16).toString("hex");
+
+    // generate expiry time STEP
+    // expiry time to be set to 30mins from current time
+    // represented in number of seconds since 1 January 1970
+    const expiryTime = Math.floor(Date.now() / 1000) + 30 * 60;
+
+    // save it in pw_pin table STEP
+    sqlQuery =
+      "INSERT INTO resetpw_pins (user_id, security_token, expiry_time) VALUES (?, ?, ?)";
+
+    conn.query(sqlQuery, [userId, securityToken, expiryTime], (err, result) => {
+      conn.end();
+
+      if (err) {
+        return callback(err, null);
+      }
+
+      // if successfully saved into pw_pin table,
+      if (result.affectedRows == 1) {
+        // prepare the mail to be sent out STEP
+        let mailOptions = {
+          from: "PriceFix <pricefix.noreply@gmail.com>",
+          to: userEmail,
+          subject: "Reset Password Requested",
+          html: `
+        <p>You have requested to reset your password.</p>
+        <p>Please use this reset link: http://localhost:3000/resetPassword/?token=${securityToken}</p>
+    
+        Best Wishes, <br/>
+        <p>PriceFix</p>
+        `,
+        };
+
+        // send out the mail STEP
+        transporter.sendMail(mailOptions, function (err, data) {
+          if (err) {
+            return callback(err, null);
+          }
+
+          return callback(null, { message: "Successful" });
+        });
+      }
+    });
+  });
 };

@@ -60,4 +60,21 @@ router.post("/signup", (req, res, next) => {
   });
 });
 
+// GET /users/getResetPWLink
+router.get("/getResetPWLink", (req, res, next) => {
+  const userEmail = req.query.userEmail;
+
+  usersController.getResetPWLink(userEmail, (err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      if (results.message && results.message == "Invalid email entered") {
+        res.status(404).send(results);
+      } else {
+        res.status(200).send(results);
+      }
+    }
+  });
+});
+
 module.exports = router;
