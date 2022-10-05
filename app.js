@@ -7,7 +7,6 @@ all configurations for the server.
 const express = require("express");
 const bodyParser = require("body-parser");
 const urlencodedParser = bodyParser.urlencoded({ extended: false });
-const fileUpload = require("express-fileupload");
 
 // To manipulate file system and manage photos uploaded by users NOTE
 // Multer is for managing user entered photos
