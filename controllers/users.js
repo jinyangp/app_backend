@@ -7,10 +7,13 @@ the routed API endpoints pertaining to users
 
 Ideas of controllers: NOTE
 1: Conrolles receive the request from router and routes request to the
-correct endpoint with the appropriae data
+correct endpoint with the appropriate data
 2: Controller returns a callback function that takes in 2 arguments (error, results)
 
 */
+
+const fs = require("fs");
+const path = require("path");
 
 const crypto = require("crypto");
 const bcrypt = require("bcryptjs");
@@ -97,6 +100,9 @@ exports.signup = function (userDetails, callback) {
   const userName = userDetails.userName;
   const userEmail = userDetails.userEmail;
   const userPassword = userDetails.userPassword;
+
+  // May have to include a regex here to check password LEFTOFFAT
+  // If frontend does validation, not needed
 
   // Hash the password STEP
   bcrypt
@@ -209,6 +215,271 @@ exports.getResetPWLink = function (userEmail, callback) {
           return callback(null, { message: "Successful" });
         });
       }
+    });
+  });
+};
+
+// GET /users/validateResetPWLink
+exports.validateResetPWLink = function (securityToken, callback) {
+  // Establish connection and connect to db STEP
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  // Prepare sql query STEP
+  let sqlQuery = "SELECT * FROM resetpw_pins WHERE security_token = ?";
+
+  conn.query(sqlQuery, [securityToken], (err, result) => {
+    // End db connection STEP
+    conn.end();
+
+    if (err) {
+      return callback(err, null);
+    }
+
+    // If no such pin is found, this pin is invalid so reset PW link is invalid STEP
+    if (result.length == 0) {
+      return callback(null, { message: "Pin not found" });
+    }
+
+    // If the pin is expired, this pin is invalid so reset PW link is invalid STEP
+    if (Date.now() > result[0].expiry_time * 1000) {
+      return callback(null, { message: "Pin expired" });
+    }
+
+    // If pin is present and not expired, pin is valid so reset PW link is valid
+    // Send back the user id as well STEP
+    return callback(null, { message: "Pin valid", userId: result[0].user_id });
+  });
+};
+
+// DELETE /users/deleteResetPin
+exports.deleteResetPWPin = function (userId, callback) {
+  // Establish connection and connect to db STEP
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  // Prepare sql query STEP
+  let sqlQuery = "DELETE FROM resetpw_pins WHERE user_id = ?";
+
+  // Query database STEP
+  conn.query(sqlQuery, [userId], (err, result) => {
+    // End connection with db STEP
+    conn.end();
+
+    if (err) {
+      return callback(err, null);
+    }
+
+    // If no pin found, return no pin found error message STEP
+    if (result.affectedRows == 0) {
+      return callback(null, { message: "No pin found" });
+    }
+
+    // Else, return success message STEP
+    return callback(null, { message: "Success" });
+  });
+};
+
+// PUT /users/updatePW
+exports.updatePW = function (userDetails, callback) {
+  // Establish connection with db STEP
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  // Deconstruct variables from object passed in STEP
+  const { userPassword, userId } = userDetails;
+
+  // Hash the new password STEP
+  bcrypt
+    .hash(userPassword, 12)
+    .then((hashedPW) => {
+      // Next, find the user and update the password STEP
+      let sqlQuery = "UPDATE users SET user_password = ? WHERE user_id = ?";
+
+      conn.query(sqlQuery, [hashedPW, userId], (err, result) => {
+        conn.end();
+
+        if (err) {
+          return callback(err, null);
+        }
+
+        // If no user with this user_id found, STEP
+        if (result.affectedRows == 0) {
+          return callback(null, { message: "User not found" });
+        }
+
+        // Else if successful, return successfully STEP
+        return callback(null, { message: "Success" });
+      });
+    })
+    .catch((err) => {
+      return callback(err, null);
+    });
+};
+
+// PUT /users/updateDetails
+exports.updateUserDetails = function (userDetails, callback) {
+  // Establish connection with db STEP
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  const { userId, userName, userEmail } = userDetails;
+
+  // Check if user entered details are valid first
+  // i.e. the new userName and userEmail should be unique STEP
+  let sqlQuery = "SELECT * FROM users WHERE user_name = ? OR user_email = ?";
+
+  conn.query(sqlQuery, [userName, userEmail], (err, result) => {
+    if (err) {
+      return callback(err, null);
+    }
+
+    // If details not are valid, return an error STEP
+    if (result.length > 0 && result[0].user_email == userEmail) {
+      return callback(null, { message: "Email already in use" });
+    } else if (result.length > 0 && result[0].user_name == userName) {
+      return callback(null, { message: "User name already in use" });
+    }
+
+    // If no matches are found, details are valid STEP
+    // Proceed to update details
+    sqlQuery =
+      "UPDATE users SET user_name = ?, user_email = ? WHERE user_id = ?";
+
+    conn.query(sqlQuery, [userName, userEmail, userId], (err, result) => {
+      // End connection with db STEP
+      conn.end();
+
+      if (err) {
+        return callback(err, null);
+      }
+
+      // If no users are found, STEP
+      if (result.affectedRows == 0) {
+        return callback(null, { message: "User not found" });
+      }
+
+      // If details are updated successfully STEP
+      return callback(null, { message: "Successful" });
+    });
+  });
+};
+
+exports.updateUserImage = function (userDetails, callback) {
+  // Establish connection with db STEP
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  const { userId, userOldImageUrl, userNewImageUrl } = userDetails;
+
+  // Check if user previously had a user image STEP
+  // If true, delete the old image from file system STEP
+  // Get file path STEP
+  const imageUrlPath =
+    userOldImageUrl == "null"
+      ? null
+      : path.join(__dirname, "..", "images", userOldImageUrl);
+
+  // Then, save image file on to backend with new url
+  // Done with the multer middleware in app.js NOTE
+  // Receive the new image file path from multe STEP
+  const newImageUrl = userNewImageUrl.slice(7).replace("\\", "/");
+
+  // Then, save details in db STEP
+  let sqlQuery = "UPDATE users SET user_imageurl = ? WHERE user_id = ?";
+
+  // Execute sql query STEP
+  conn.query(sqlQuery, [newImageUrl, userId], (err, result) => {
+    conn.end();
+
+    // End connection with db STEP
+    if (err) {
+      return callback(err, null);
+    }
+
+    // If no users are found, STEP
+    if (result.affectedRows == 0) {
+      return callback(null, { message: "User not found" });
+    }
+
+    // If user found, delete old image if there is one STEP
+    if (imageUrlPath != undefined) {
+      fs.unlink(imageUrlPath, (err) => {
+        if (err) {
+          console.log(err);
+          return callback(err, null);
+        }
+
+        return callback(null, { message: "Successful" });
+      });
+    } else {
+      return callback(null, { message: "Successful" });
+    }
+  });
+};
+
+exports.deleteUserImage = function (userDetails, callback) {
+  // Establish connection with db STEP
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  const { userId, userOldImageUrl } = userDetails;
+
+  let sqlQuery = "UPDATE users SET user_imageurl = NULL WHERE user_id = ?";
+
+  // Execute sql query STEP
+  conn.query(sqlQuery, [userId], (err, result) => {
+    conn.end();
+
+    // End connection with db STEP
+    if (err) {
+      return callback(err, null);
+    }
+
+    // If no users are found, STEP
+    if (result.affectedRows == 0) {
+      return callback(null, { message: "User not found" });
+    }
+
+    const imageUrlPath = path.join(__dirname, "..", "images", userOldImageUrl);
+
+    fs.unlink(imageUrlPath, (err) => {
+      if (err) {
+        console.log(err);
+        return callback(err, null);
+      }
+
+      return callback(null, { message: "Successful" });
     });
   });
 };
