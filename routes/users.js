@@ -51,10 +51,10 @@ router.post("/signup", (req, res, next) => {
   // Pass data on to controller and receive callback as the results STEP
   usersController.signup(userDetails, (err, results) => {
     if (err) {
-      res.status(500).send({ status: 500, message: "Internal Server Error" });
+      res.status(500).send({ message: "Internal Server Error" });
     } else {
       if (results.message && results.message == "User created") {
-        res.status(201).send({ ...results, status: 201 });
+        res.status(201).send(results);
       }
     }
   });
