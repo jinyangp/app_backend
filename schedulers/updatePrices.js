@@ -84,22 +84,22 @@ const updateProductPrices = cron.schedule("*/59 * 1-31 * *", () => {
 
     // Format the data into a single 1D array STEP
     let finalDetailsArr = [];
-    for (i = 0; i < updatedDetailsArr.length; i++) {
-      finalDetailsArr = [
-        ...finalDetailsArr,
+    for (let i = 0; i < updatedDetailsArr.length; i++) {
+      let curProdDetails = [
         updatedDetailsArr[i].product_id,
         updatedDetailsArr[i].product_timestamp,
         updatedDetailsArr[i].product_price,
       ];
+      finalDetailsArr.push(curProdDetails);
     }
 
     // console.log(finalDetailsArr);
 
     // Update prices of the selected specific products STEP
     sqlQuery =
-      "INSERT INTO prices (price_product_id, price_timestamp, price_price) VALUES (?,?,?),(?,?,?),(?,?,?),(?,?,?),(?,?,?),(?,?,?),(?,?,?),(?,?,?)";
+      "INSERT INTO prices (price_product_id, price_timestamp, price_price) VALUES ?";
 
-    conn.query(sqlQuery, finalDetailsArr, (err, result) => {
+    conn.query(sqlQuery, [finalDetailsArr], (err, result) => {
       conn.end();
 
       if (err) {
