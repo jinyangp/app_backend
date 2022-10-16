@@ -20,7 +20,7 @@ const { SERVER_PORT, FRONTEND_URL } = require("./config");
 
 // Set up routes NOTE
 const usersRoutes = require("./routes/users");
-
+const productRoutes = require("./routes/products")
 // Start up server STEP
 const app = express();
 
@@ -43,3 +43,4 @@ app.use(bodyParser.json());
 
 // Set up routes STEP
 app.use("/users", usersRoutes);
+app.use("/products", productRoutes)
