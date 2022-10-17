@@ -21,8 +21,8 @@ const cors = require("cors");
 const { SERVER_PORT, FRONTEND_URL } = require("./config");
 
 // To set up routes NOTE
-const usersRoutes = require("./routes/users");
-const productRoutes = require("./routes/products");
+const usersRoutes = require("./controllers/users");
+const productRoutes = require("./controllers/products");
 // Start up server STEP
 const app = express();
 
