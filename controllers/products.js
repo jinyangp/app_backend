@@ -1,9 +1,6 @@
 const dbconnect = require("../middlewares/dbconfig");
 
-// GET / products / getCategories
-// should return category id, name, imageurl, and number of products in category
-// join products and categories tables and count the number of rows [ Left-Join and Count ]
-
+// GET /products/getCategories
 exports.getCategories = function (callback) {
   const conn = dbconnect.getConnection();
 
@@ -31,6 +28,7 @@ exports.getCategories = function (callback) {
   });
 };
 
+// GET /products/getItemsByCategory
 exports.getItemsByCategory = function (input, callback) {
   const conn = dbconnect.getConnection();
 
@@ -65,6 +63,7 @@ exports.getItemsByCategory = function (input, callback) {
   });
 };
 
+// GET /products/searchItem
 exports.searchItem = function (input, callback) {
   const conn = dbconnect.getConnection();
 
@@ -101,8 +100,7 @@ exports.searchItem = function (input, callback) {
   });
 };
 
-// LEFTOFFAT
-
+// GET /products/getItemDetails
 exports.getItemDetails = function (productId, callback) {
   const conn = dbconnect.getConnection();
   conn.connect((err) => {
@@ -122,9 +120,8 @@ exports.getItemDetails = function (productId, callback) {
   });
 };
 
-/*
-
-exports.getPrices = function (input, callback) {
+// GET /products/getPrices
+exports.getPrices = function (productDetails, callback) {
   const conn = dbconnect.getConnection();
   conn.connect((err) => {
     if (err) {
@@ -132,30 +129,26 @@ exports.getPrices = function (input, callback) {
     }
   });
 
-  const productName = input.productName;
+  const productName = productDetails.productName;
+  const timeStampLimit = productDetails.timeStampLimit;
 
-  let sqlQuery =
-    "SELECT product_id FROM products\
-    LEFT JOIN\
-    (SELECT price_timestamp, price_price,price_product_id FROM prices\
-    GROUP BY price_product_id)\
-    AS priceInformation\
-    ON products.product_id = \
-    priceInformation.product_id\
-    AND product_name = '%productName%'";
+  let sqlQuery = `SELECT product_id, price_price, price_timestamp, product_name, product_platform FROM prices\
+  INNER JOIN (\
+  SELECT * FROM products WHERE product_name LIKE '%${productName}%'\
+  ) AS matched_products\
+  ON prices.price_product_id = matched_products.product_id\
+  AND price_timestamp >= ?`;
 
-  conn.query(sqlQuery, [productName], (err, result) => {
+  conn.query(sqlQuery, [timeStampLimit], (err, result) => {
     conn.end();
     if (err) {
       return callback(err, null);
     }
 
     if (result.length == 0) {
-      return callback(null, { message: "Invalid Search" });
+      return callback(null, { message: "No Price Data Found" });
     }
 
     return callback(null, result);
   });
 };
-
-*/

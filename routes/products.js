@@ -6,8 +6,7 @@ const express = require("express");
 const router = express.Router();
 const productController = require("../controllers/products");
 
-// GET / products / getCategories
-
+// GET /products/getCategories
 router.get("/getCategories", (req, res, next) => {
   productController.getCategories((err, results) => {
     if (err) {
@@ -22,13 +21,7 @@ router.get("/getCategories", (req, res, next) => {
   });
 });
 
-// GET / Products / getItemsByCategory
-// get back all products in the category
-// get all products' details
-// Image, name, platform, price
-
-// SELECT * from products where categoryID = query_category
-
+// GET /products/getItemsByCategory
 router.get("/getItemsByCategory", (req, res, next) => {
   const input = {
     cat: req.query.cat,
@@ -47,7 +40,7 @@ router.get("/getItemsByCategory", (req, res, next) => {
   });
 });
 
-// GET / products / searchItem
+// GET /products/searchItem
 router.get("/searchItem", (req, res, next) => {
   const input = {
     productName: req.query.productName,
@@ -67,10 +60,7 @@ router.get("/searchItem", (req, res, next) => {
   });
 });
 
-// LEFTOFFAT
-
-// GET / products / getItemDetails
-// Product name, description, quantity, price, platform
+// GET /products/getItemDetails
 router.get("/getItemDetails", (req, res, next) => {
   const productId = req.query.productId;
 
@@ -83,19 +73,18 @@ router.get("/getItemDetails", (req, res, next) => {
   });
 });
 
-/*
-
-// GET / products / getPrices
+// GET /products/getPrices
 router.get("/getPrices", (req, res, next) => {
-  const input = {
+  const productDetails = {
     productName: req.query.productName,
+    timeStampLimit: req.query.timeStampLimit,
   };
 
-  productController.getPrices((err, results) => {
+  productController.getPrices(productDetails, (err, results) => {
     if (err) {
       res.status(500).send({ message: "Internal Server Error" });
     } else {
-      if (results.message == "No Price Data Found") {
+      if (results.message && results.message == "No Price Data Found") {
         res.status(404).send(results);
       } else {
         res.status(200).send(results);
@@ -103,30 +92,5 @@ router.get("/getPrices", (req, res, next) => {
     }
   });
 });
-
-*/
-
-// POST / products / updateProductDetails
-
-// router.post("/updateProductDetails", (req,res,next) => {
-//     const input = {
-//         productPrice : req.body.productPrice,
-//         productName : req.body.productName,
-//         productID : req.body.productID,
-//         productQty : req.body.productQty
-//     }
-
-//     productController.updateProductDetails(input, (err,results) => {
-//         if (err)
-//         {
-//             res.status(501).send({ message: "Internal Server Error" })
-//         }
-
-//         else
-//         {
-//             res.status(201).send(results)
-//         }
-//     })
-// })
 
 module.exports = router;
