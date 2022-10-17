@@ -127,4 +127,4 @@ dist
 .pnp.*
 
 # Ignore changes made to product images folder
-images/productImages
+images

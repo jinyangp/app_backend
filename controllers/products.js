@@ -77,10 +77,17 @@ exports.searchItem = function (input, callback) {
   const productName = input.productName;
   const categoryId = input.categoryId;
 
-  let sqlQuery =
-    "SELECT * FROM products WHERE product_name LIKE '%?%' AND category_id = ?";
+  let sqlQuery = `SELECT product_id, product_name, product_desc, product_platform, product_imageurl, product_qty, category_id, product_purchaseurl, price_price FROM products\
+  INNER JOIN\
+  (SELECT price_price, price_product_id, MAX(price_timestamp) AS latest_timestamp FROM prices\
+  GROUP BY price_product_id)\
+  AS latestPrices\
+  ON products.product_id = \
+  latestPrices.price_product_id AND\
+  products.category_id = ? AND\
+  product_name LIKE '%${productName}%'`;
 
-  conn.query(sqlQuery, [productName, categoryId], (err, result) => {
+  conn.query(sqlQuery, [categoryId], (err, result) => {
     conn.end();
     if (err) {
       return callback(err, null);
@@ -93,6 +100,8 @@ exports.searchItem = function (input, callback) {
     return callback(null, result);
   });
 };
+
+// LEFTOFFAT
 
 exports.getItemDetails = function (productId, callback) {
   const conn = dbconnect.getConnection();
@@ -113,7 +122,6 @@ exports.getItemDetails = function (productId, callback) {
   });
 };
 
-// LEFTOFFAT
 /*
 
 exports.getPrices = function (input, callback) {

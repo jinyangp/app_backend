@@ -67,6 +67,8 @@ router.get("/searchItem", (req, res, next) => {
   });
 });
 
+// LEFTOFFAT
+
 // GET / products / getItemDetails
 // Product name, description, quantity, price, platform
 router.get("/getItemDetails", (req, res, next) => {
@@ -81,7 +83,6 @@ router.get("/getItemDetails", (req, res, next) => {
   });
 });
 
-// LEFTOFFAT
 /*
 
 // GET / products / getPrices
