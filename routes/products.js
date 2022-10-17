@@ -2,145 +2,108 @@
     File Purpose: 
 */
 
-
-const { Router } = require("express")
-const express = require("express")
-const router = express.Router()
-const productController = require("../controllers/products")
+const express = require("express");
+const router = express.Router();
+const productController = require("../controllers/products");
 
 // GET / products / getCategories
 
-router.get("/getCategories", (req,res,next) => {
-
-    productController.getCategories((err, results) => {
-        if (err)
-        {
-            res.status(500).send({ message: "Internal Server Error" })
-        }
-        else
-        {
-            if (results.message && results.message === "No Categories Found")
-            {
-                res.status(404).send(results)
-            }
-            else
-            {
-                res.status(200).send(results)
-            }
-        }
-    })
-})
+router.get("/getCategories", (req, res, next) => {
+  productController.getCategories((err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      if (results.message && results.message === "No Categories Found") {
+        res.status(404).send(results);
+      } else {
+        res.status(200).send(results);
+      }
+    }
+  });
+});
 
 // GET / Products / getItemsByCategory
 // get back all products in the category
 // get all products' details
 // Image, name, platform, price
 
-
 // SELECT * from products where categoryID = query_category
 
+router.get("/getItemsByCategory", (req, res, next) => {
+  const input = {
+    cat: req.query.cat,
+  };
 
-router.get("/getItemsByCategory", (req,res,next) => {
-    const input = {
-        cat: req.query.cat // Unsure about this query
+  productController.getItemsByCategory(input, (err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      if (results.message && results.message === "No Products Found") {
+        res.status(404).send(results);
+      } else {
+        res.status(200).send(results);
+      }
     }
-
-    productController.getItemsByCategory(input, (err,results) => {
-        if (err)
-        {
-            res.status(500).send({ message: "Internal Server Error" })
-
-        }
-        else
-        {
-            if (results.message == "No Products Found")
-            {
-                res.status(404).send(results)
-            }
-            else
-            {
-                res.status(200).send(results)
-            }
-        }
-    })
-})
-
+  });
+});
 
 // GET / products / searchItem
-// Get back product details based on search query, and if they indicated a category to search from
-// Read up on SQL Like Operator [ 'like,%' ]
-router.get("/searchItem", (req,res,next) => {
-    const input = {
-        productName: req.query.productName,
-        searchByCat_ID: req.query.searchByCat_ID
+router.get("/searchItem", (req, res, next) => {
+  const input = {
+    productName: req.query.productName,
+    categoryId: req.query.categoryId,
+  };
+
+  productController.searchItem(input, (err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      if (results.message && results.message == "Invalid Search") {
+        res.status(404).send(results);
+      } else {
+        res.status(200).send(results);
+      }
     }
-
-    productController.searchItem(input, (err,results) => {
-        if (err)
-        {
-            res.status(500).send({ message: "Internal Server Error" })
-        }
-
-        else
-        {
-            if (results.message == "Invalid Search")
-            {
-                res.status(404).send(results)
-            }
-            else
-            {
-                res.status(200).send(results)
-            }
-        }
-    })
-})
+  });
+});
 
 // GET / products / getItemDetails
 // Product name, description, quantity, price, platform
-router.get("/getItemDetails", (req,res,next) => {
-    const input = {
-        heading : req.query.heading
+router.get("/getItemDetails", (req, res, next) => {
+  const productId = req.query.productId;
+
+  productController.getItemDetails(productId, (err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      res.status(200).send(results);
     }
+  });
+});
 
-    productController.getItemDetails(input, (err,results) => {
-        if (err)
-        {
-            res.status(500).send({ message: "Internal Server Error" })
-        }
-
-        else
-        {   
-            res.status(200).send(results)   
-        }
-    })
-})
+// LEFTOFFAT
+/*
 
 // GET / products / getPrices
-// LOW-PRIORITY
-router.get("/getPrices", (req,res,next) => {
-    const input = {
-        productName : req.query.productName
+router.get("/getPrices", (req, res, next) => {
+  const input = {
+    productName: req.query.productName,
+  };
+
+  productController.getPrices((err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      if (results.message == "No Price Data Found") {
+        res.status(404).send(results);
+      } else {
+        res.status(200).send(results);
+      }
     }
+  });
+});
 
-    productController.getPrices((err,results) => {
-        if (err)
-        {
-            res.status(500).send({ message: "Internal Server Error" })
-        }
-
-        else
-        {
-            if (results.message == "No Price Data Found")
-            {
-                res.status(404).send(results)
-            }
-            else
-            {
-                res.status(200).send(results)
-            }
-        }
-    })
-})
+*/
 
 // POST / products / updateProductDetails
 
@@ -165,4 +128,4 @@ router.get("/getPrices", (req,res,next) => {
 //     })
 // })
 
-module.exports = router
+module.exports = router;
