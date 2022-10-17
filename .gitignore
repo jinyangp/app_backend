@@ -126,5 +126,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Ignore changes made to product images folder
+# Ignore changes made to images folder
 images
