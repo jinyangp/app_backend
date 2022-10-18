@@ -10,7 +10,7 @@ exports.getCategories = function (callback) {
     }
   });
   let sqlQuery =
-    "SELECT category_name, category_imageurl, COUNT(*) AS category_productcount FROM category\
+    "SELECT category.category_id, category_name, category_imageurl, COUNT(*) AS category_productcount FROM category\
         LEFT JOIN products\
         ON category.category_id = products.category_id\
         GROUP BY category.category_id";
