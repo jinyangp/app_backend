@@ -41,14 +41,12 @@ exports.getItemsByCategory = function (input, callback) {
   const category_id = input.cat;
 
   let sqlQuery =
-    "SELECT product_id, product_name, product_desc, product_platform, product_imageurl, product_qty, category_id, product_purchaseurl, price_price FROM products\
-    INNER JOIN\
-    (SELECT price_price, price_product_id, MAX(price_timestamp) AS latest_timestamp FROM prices\
-    GROUP BY price_product_id)\
-    AS latestPrices\
-    ON products.product_id = \
-    latestPrices.price_product_id AND\
-    products.category_id = ?";
+    "SELECT product_id, product_name, product_desc, product_platform, product_imageurl, product_qty, category_id, product_purchaseurl, price_price\
+    FROM products AS p\
+    INNER JOIN prices AS pr ON p.product_id = pr.price_product_id\
+    WHERE p.category_id = ?\
+    ORDER BY pr.price_timestamp DESC\
+    LIMIT 8";
 
   conn.query(sqlQuery, [category_id], (err, result) => {
     conn.end();
