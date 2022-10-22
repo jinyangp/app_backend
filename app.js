@@ -23,6 +23,8 @@ const { SERVER_PORT, FRONTEND_URL } = require("./config");
 // To set up routes NOTE
 const usersRoutes = require("./controllers/users");
 const productRoutes = require("./controllers/products");
+const wishlistRoutes = require("./controllers/wishlists");
+
 // Start up server STEP
 const app = express();
 
@@ -88,3 +90,4 @@ app.use(cors(corsOptions));
 // Set up routes STEP
 app.use("/users", usersRoutes);
 app.use("/products", productRoutes);
+app.use("/wishlists", wishlistRoutes);
