@@ -8,6 +8,23 @@ const wishlists = require("../models/wishlists");
 
 const verifyFns = require("../middlewares/verifyFns");
 
+// GET /wishlists/getWishlistItems
+router.get("/getWishlistItems", verifyFns.verifyToken, (req, res, next) => {
+  const userId = req.query.userId;
+
+  wishlists.getWishListItem(userId, (err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      if (results.message && results.message == "No wishlist items") {
+        res.status(404).send(results);
+      } else {
+        res.status(200).send(results);
+      }
+    }
+  });
+});
+
 // POST /wishlists/addWishlistItem
 router.post("/addWishlistItem", verifyFns.verifyToken, (req, res, next) => {
   // When adding to item's wishlist, need userId, productId and targetPrce STEP
@@ -23,7 +40,7 @@ router.post("/addWishlistItem", verifyFns.verifyToken, (req, res, next) => {
       res.status(500).send({ message: "Internal Server Error" });
     } else {
       if (results.message && results.message == "Wishlist item added") {
-        res.status(201).send({ message: "Wishlist item added" });
+        res.status(201).send(results);
       }
     }
   });
@@ -47,9 +64,9 @@ router.delete(
           results.message &&
           results.message == "No such wishlist item found"
         ) {
-          res.status(404).send({ message: results.message });
+          res.status(404).send(results);
         } else {
-          res.status(200).send({ message: results.message });
+          res.status(200).send(results);
         }
       }
     });
@@ -69,9 +86,9 @@ router.put("/updateTargetPrice", verifyFns.verifyToken, (req, res, next) => {
       res.status(500).send({ message: "Internal Server Error" });
     } else {
       if (results.message && results.message == "No such wishlist item found") {
-        res.status(404).send({ message: results.message });
+        res.status(404).send(results);
       } else {
-        res.status(200).send({ message: results.message });
+        res.status(200).send(results);
       }
     }
   });

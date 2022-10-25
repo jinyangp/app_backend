@@ -34,6 +34,10 @@ const verifyToken = (req, res, next) => {
       return res.status(403).send({ message: "Incorrect user" });
     }
 
+    if (req.query.userId && req.query.userId != results.userId) {
+      return res.status(403).send({ message: "Incorrect user" });
+    }
+
     // ELse, attach userId to req object and pass on to next middleware STEP
     next();
   });

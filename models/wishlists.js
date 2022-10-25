@@ -5,6 +5,42 @@ the routed API endpoints pertaining to wishlists
 
 const dbconnect = require("../middlewares/dbconfig");
 
+exports.getWishListItem = (userId, callback) => {
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  let sqlQuery = `SELECT product_id, product_name, product_desc, product_platform, product_imageurl, product_qty, category_id, product_purchaseurl, target_price, price_price FROM products\
+  INNER JOIN (\
+  SELECT wishlist_product_id AS pid, target_price FROM wishlist_items WHERE wishlist_user_id = ?\
+  )\
+  AS users_wl ON products.product_id = users_wl.pid\
+  INNER JOIN (\ 
+  SELECT t1.* FROM prices t1\
+  JOIN (SELECT price_product_id, MAX(price_timestamp) price_timestamp, price_price FROM prices GROUP BY price_product_id) t2\
+  ON t1.price_product_id = t2.price_product_id AND t1.price_timestamp = t2.price_timestamp\
+  ) AS latest_prices\
+  ON products.product_id = latest_prices.price_product_id`;
+
+  conn.query(sqlQuery, [userId], (err, result) => {
+    conn.end();
+
+    if (err) {
+      return callback(err, null);
+    }
+
+    if (result.length == 0) {
+      return callback(null, { message: "No wishlist items" });
+    }
+
+    return callback(null, result);
+  });
+};
+
 exports.addWishListItem = (details, callback) => {
   const conn = dbconnect.getConnection();
 
