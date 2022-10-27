@@ -107,13 +107,24 @@ exports.getItemDetails = function (productId, callback) {
     }
   });
 
-  let sqlQuery = "SELECT * FROM products WHERE product_id = ?";
+  let sqlQuery =
+    "SELECT product_id, product_name, product_desc, product_platform, product_imageurl, product_qty, category_id, product_purchaseurl, price_price FROM products\
+  INNER JOIN (\
+  SELECT * FROM prices WHERE price_product_id = ?\
+  ORDER BY price_timestamp DESC LIMIT 1\
+  ) AS latest_price\
+  WHERE products.product_id = latest_price.price_product_id";
 
   conn.query(sqlQuery, [productId], (err, result) => {
     conn.end();
     if (err) {
       return callback(err, null);
     }
+
+    if (result.length == 0) {
+      return callback(null, { message: "No Product Found" });
+    }
+
     return callback(null, result);
   });
 };

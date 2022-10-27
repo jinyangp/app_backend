@@ -68,7 +68,11 @@ router.get("/getItemDetails", (req, res, next) => {
     if (err) {
       res.status(500).send({ message: "Internal Server Error" });
     } else {
-      res.status(200).send(results);
+      if (results.message && results.message == "No Product Found") {
+        res.status(404).send(results);
+      } else {
+        res.status(200).send(results);
+      }
     }
   });
 });
