@@ -72,7 +72,6 @@ exports.searchItem = function (input, callback) {
   });
 
   const productName = input.productName;
-  const categoryId = input.categoryId;
 
   let sqlQuery = `SELECT product_id, product_name, product_desc, product_platform, product_imageurl, product_qty, category_id, product_purchaseurl, price_price FROM products\
   INNER JOIN\
@@ -81,10 +80,9 @@ exports.searchItem = function (input, callback) {
   AS latestPrices\
   ON products.product_id = \
   latestPrices.price_product_id AND\
-  products.category_id = ? AND\
   product_name LIKE '%${productName}%'`;
 
-  conn.query(sqlQuery, [categoryId], (err, result) => {
+  conn.query(sqlQuery, [], (err, result) => {
     conn.end();
     if (err) {
       return callback(err, null);
