@@ -130,3 +130,58 @@ exports.updateTargetPrice = (details, callback) => {
     return callback(null, { message: "Target price updated" });
   });
 };
+
+exports.getNotifications = (userId, callback) => {
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  let sqlQuery =
+    "SELECT notif_item_id, notif_user_id, notif_product_id, notif_message, notif_timestamp, notif_read, product_imageurl FROM notif_items\
+  INNER JOIN products\
+  ON notif_items.notif_product_id = products.product_id AND notif_items.notif_user_id = ?";
+
+  conn.query(sqlQuery, [userId], (err, result) => {
+    conn.end();
+
+    if (err) {
+      return callback(err, null);
+    }
+
+    if (result.length == 0) {
+      return callback(null, { message: "No notifications" });
+    }
+
+    return callback(null, result);
+  });
+};
+
+exports.markNotificationAsRead = (notifId, callback) => {
+  const conn = dbconnect.getConnection();
+
+  conn.connect((err) => {
+    if (err) {
+      return callback(err, null);
+    }
+  });
+
+  let sqlQuery = "UPDATE notif_items SET notif_read = 1 WHERE	notif_item_id = ?";
+
+  conn.query(sqlQuery, [notifId], (err, result) => {
+    conn.end();
+
+    if (err) {
+      return callback(err, null);
+    }
+
+    if (result.affectedRows == 0) {
+      return callback(null, { message: "No such notification" });
+    }
+
+    return callback(null, { message: "Success" });
+  });
+};

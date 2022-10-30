@@ -94,4 +94,39 @@ router.put("/updateTargetPrice", verifyFns.verifyToken, (req, res, next) => {
   });
 });
 
+router.get("/getNotifications", verifyFns.verifyToken, (req, res, next) => {
+  const userId = req.query.userId;
+
+  wishlists.getNotifications(userId, (err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      if (results.message && results.message == "No notifications") {
+        res.status(404).send(results);
+      } else {
+        res.status(200).send(results);
+      }
+    }
+  });
+});
+
+router.put(
+  "/markNotificationAsRead",
+  verifyFns.verifyToken,
+  (req, res, next) => {
+    const notifId = req.body.notifId;
+
+    wishlists.markNotificationAsRead(notifId, (err, results) => {
+      if (err) {
+        res.status(500).send({ message: "Internal Server Error" });
+      } else {
+        if (results.message && results.message == "No such notification") {
+          res.status(404).send(results);
+        } else {
+          res.status(200).send(results);
+        }
+      }
+    });
+  }
+);
 module.exports = router;
