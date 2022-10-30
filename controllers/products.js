@@ -44,7 +44,6 @@ router.get("/getItemsByCategory", (req, res, next) => {
 router.get("/searchItem", (req, res, next) => {
   const input = {
     productName: req.query.productName,
-    categoryId: req.query.categoryId,
   };
 
   products.searchItem(input, (err, results) => {
