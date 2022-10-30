@@ -17,6 +17,31 @@ const express = require("express");
 const router = express.Router();
 const users = require("../models/users");
 
+// GET /users/verifyJWT
+router.get("/verifyJWT", (req, res, next) => {
+  const userDetails = {
+    userToken: req.headers.authorization.split(" ")[1],
+    userId: req.query.userId,
+  };
+
+  users.verifyJWT(userDetails, (err, results) => {
+    if (err) {
+      res.status(500).send({ message: "Internal Server Error" });
+    } else {
+      if (results.message && results.message == "No JWT token") {
+        res.status(401).send(results);
+      } else if (
+        (results.message && results.message == "Invalid JWT") ||
+        (results.message && results.message == "Incorrect user")
+      ) {
+        res.status(403).send(results);
+      } else {
+        res.status(200).send(results);
+      }
+    }
+  });
+});
+
 // GET /users/login
 router.get("/login", (req, res, next) => {
   // Receive the relevant query/body parameters from frontend STEP

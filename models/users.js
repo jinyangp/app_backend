@@ -23,6 +23,30 @@ const dbconnect = require("../middlewares/dbconfig");
 const { ACCESS_TOKEN_SECRET } = require("../config");
 const transporter = require("../middlewares/emailconfig");
 
+// GET /users/verifyJWT
+exports.verifyJWT = function (userDetails, callback) {
+  const userToken = userDetails.userToken;
+  const userId = userDetails.userId;
+
+  if (userToken == undefined) {
+    return callback(null, { message: "No JWT token" });
+  }
+
+  // Verify JWT
+  // If JWT cannot be verified, return unauthenticated STEP
+  jwt.verify(userToken, ACCESS_TOKEN_SECRET, (err, results) => {
+    if (err) {
+      return callback(null, { message: "Invalid JWT" });
+    }
+
+    if (userId != results.userId) {
+      return callback(null, { message: "Incorrect user" });
+    }
+
+    return callback(null, { message: "Authenticated" });
+  });
+};
+
 // GET /users/login
 exports.login = function (userDetails, callback) {
   // Create the db connection and try to connect to it STEP
