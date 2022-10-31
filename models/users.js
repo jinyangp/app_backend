@@ -57,54 +57,71 @@ exports.login = function (userDetails, callback) {
     if (err) {
       return callback(err, null);
     }
+  });
 
-    // Get relevant user details from router STEP
-    const userNameOrEmail = userDetails.userNameOrEmail;
-    const userPassword = userDetails.userPassword;
+  // Get relevant user details from router STEP
+  const userNameOrEmail = userDetails.userNameOrEmail;
+  const userPassword = userDetails.userPassword;
+  let fetchedUserDetails = {};
 
-    // Check if user name or email matches first STEP
-    let sqlQuery = "SELECT * FROM users WHERE user_name = ? OR user_email = ?";
+  // Check if user name or email matches first STEP
+  let sqlQuery = "SELECT * FROM users WHERE user_name = ? OR user_email = ?";
 
-    conn.query(sqlQuery, [userNameOrEmail, userNameOrEmail], (err, result) => {
-      if (err) {
-        return callback(err, null);
-      }
+  conn.query(sqlQuery, [userNameOrEmail, userNameOrEmail], (err, result) => {
+    if (err) {
+      return callback(err, null);
+    }
 
-      // if no such user found with these details STEP
-      if (result.length == 0) {
-        return callback(null, { message: "Unauthenticated" });
-      }
+    // if no such user found with these details STEP
+    if (result.length == 0) {
+      return callback(null, { message: "Unauthenticated" });
+    }
 
-      // Compare plain text password from router with hashed password in DB STEP
-      bcrypt
-        .compare(userPassword, result[0].user_password)
-        .then((pwMatches) => {
-          // if user entered password is wrong, unauthenticated STEP
-          if (!pwMatches) {
-            return callback(null, { message: "Unauthenticated" });
+    // Compare plain text password from router with hashed password in DB STEP
+    bcrypt
+      .compare(userPassword, result[0].user_password)
+      .then((pwMatches) => {
+        // if user entered password is wrong, unauthenticated STEP
+        if (!pwMatches) {
+          return callback(null, { message: "Unauthenticated" });
+        }
+
+        // prepare and return back user data if authenticated STEP
+        fetchedUserDetails = {
+          userId: result[0].user_id,
+          userName: result[0].user_name,
+          userImageUrl: result[0].user_imageurl,
+        };
+
+        let sqlQuery =
+          "SELECT wishlist_product_id FROM wishlist_items WHERE wishlist_user_id = ?";
+
+        conn.query(sqlQuery, [fetchedUserDetails.userId], (err, result) => {
+          conn.end();
+
+          if (err) {
+            return callback(err, null);
           }
 
-          // prepare and return back user data if authenticated STEP
-          const userDetails = {
-            userId: result[0].user_id,
-            userName: result[0].user_name,
-            userImageUrl: result[0].user_imageurl,
-          };
+          fetchedUserDetails.wishlistIds = [];
+          for (let wlItem of result) {
+            fetchedUserDetails.wishlistIds.push(wlItem.wishlist_product_id);
+          }
 
           const data = {
-            ...userDetails,
-            token: jwt.sign(userDetails, ACCESS_TOKEN_SECRET, {
+            ...fetchedUserDetails,
+            token: jwt.sign(fetchedUserDetails, ACCESS_TOKEN_SECRET, {
               expiresIn: "1h",
             }),
             message: "Authenticated",
           };
 
           return callback(null, data);
-        })
-        .catch((err) => {
-          return callback(err, null);
         });
-    });
+      })
+      .catch((err) => {
+        return callback(err, null);
+      });
   });
 };
 
