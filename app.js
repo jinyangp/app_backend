@@ -18,7 +18,12 @@ const { v4: uuidv4 } = require("uuid");
 const cors = require("cors");
 
 // Get environment variables NOTE
-const { SERVER_PORT, FRONTEND_URL } = require("./config");
+const {
+  SERVER_PORT,
+  FRONTEND_URL_DEV,
+  FRONTEND_URL_PROD,
+  FRONTEND_URL_PROD_TEST,
+} = require("./config");
 
 // To set up routes NOTE
 const usersRoutes = require("./controllers/users");
@@ -80,7 +85,7 @@ app.use(
 
 // Set up CORS for app STEP
 const corsOptions = {
-  origin: FRONTEND_URL,
+  origin: [FRONTEND_URL_DEV, FRONTEND_URL_PROD, FRONTEND_URL_PROD_TEST],
   credentials: true,
   optionsSuccessStatus: 200,
 };
