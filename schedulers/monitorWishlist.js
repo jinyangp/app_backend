@@ -5,6 +5,7 @@ File Purpose: To periodically monitor the wishlist to send out notifications
 const cron = require("node-cron");
 const dbconnect = require("../middlewares/dbconfig");
 const transporter = require("../middlewares/emailconfig");
+const { FRONTEND_URL_DEV, FRONTEND_URL_PROD } = require("../config");
 
 /*
 Steps to monitor wishlist:
@@ -100,8 +101,7 @@ const monitorWishlist = cron.schedule("*/10 * * * * *", () => {
 
         <p>Dear ${notif.user_name},</p>
         <p>The target price you have set for ${notif.product_name} selling on ${notif.product_platform} has been reached!</p>
-        <p>Check it out now: http://localhost:3000/itemDetails/${notif.wishlist_product_id}</p>
-    
+        <p>Check it out now: ${FRONTEND_URL_PROD}/item-details/${notif.wishlist_product_id}</p>
         Best Wishes, <br/>
         <p>PriceFix</p>
         `,
