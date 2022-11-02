@@ -101,7 +101,7 @@ const monitorWishlist = cron.schedule("*/10 * * * * *", () => {
 
         <p>Dear ${notif.user_name},</p>
         <p>The target price you have set for ${notif.product_name} selling on ${notif.product_platform} has been reached!</p>
-        <p>Check it out now: ${FRONTEND_URL_PROD}/item-details/${notif.wishlist_product_id}</p>
+        <p>Check it out now: ${FRONTEND_URL_PROD}</p>
         Best Wishes, <br/>
         <p>PriceFix</p>
         `,
