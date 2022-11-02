@@ -73,14 +73,15 @@ exports.searchItem = function (input, callback) {
 
   const productName = input.productName;
 
-  let sqlQuery = `SELECT product_id, product_name, product_desc, product_platform, product_imageurl, product_qty, category_id, product_purchaseurl, price_price FROM products\
-  INNER JOIN\
-  (SELECT price_price, price_product_id, MAX(price_timestamp) AS latest_timestamp FROM prices\
-  GROUP BY price_product_id)\
-  AS latestPrices\
-  ON products.product_id = \
-  latestPrices.price_product_id AND\
-  product_name LIKE '%${productName}%'`;
+  let sqlQuery = `SELECT product_id, product_name, product_desc, product_platform, product_imageurl, product_qty, category_id, product_purchaseurl, price_price FROM products
+  INNER JOIN
+  (SELECT t1.* FROM prices t1
+  JOIN (SELECT price_product_id, MAX(price_timestamp) price_timestamp, price_price FROM prices GROUP BY price_product_id) t2
+  ON t1.price_product_id = t2.price_product_id AND t1.price_timestamp = t2.price_timestamp)
+  AS latestPrices
+  ON products.product_id = 
+  latestPrices.price_product_id AND
+  product_name LIKE '%${productName}%';`;
 
   conn.query(sqlQuery, [], (err, result) => {
     conn.end();

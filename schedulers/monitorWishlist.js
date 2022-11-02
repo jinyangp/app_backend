@@ -20,7 +20,7 @@ Step 2: STEP
 2) Send out an email for each of these users
 */
 
-const monitorWishlist = cron.schedule("*/10 * * * * *", () => {
+const monitorWishlist = cron.schedule("*/20 * * * * *", () => {
   const conn = dbconnect.getConnection();
 
   conn.connect((err) => {
